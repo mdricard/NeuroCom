@@ -99,7 +99,7 @@ def plot_cop():
     plt.plot(x[1:], fp_cofx[1:], label='fpcofx')
     plt.plot(x[1:], fp_cofy[1:], label='fpcofy')
     plt.legend()
-    plt.grid()
+    plt.grid(True)
     plt.xlabel('Point Number (n)')
     plt.ylabel('Force (N)')
     plt.show()
@@ -107,25 +107,66 @@ def plot_cop():
 def plot_shear():
     plt.plot(x[1:], sh[1:], label='Shear')
     plt.legend()
-    plt.grid()
+    plt.grid(True)
     plt.xlabel('Point Number (n)')
     plt.ylabel('Shear Force (N)')
     plt.show()
 
+def plot_cog_and_shear():
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
+    #ax1.plot(x, smooth_cog_x, 'b-', label='Cog X')
+    ax1.plot(x, smooth_cog_y, 'r-', label='Cog Y')
+    ax2.plot(x, smooth_shear, 'k-', label='Shear')
+    ax1.set_ylabel('COG (cm)')
+    ax2.set_ylabel('Shear Force (N)')
+    #fig.tight_layout()
+    plt.grid(True)
+    #plt.legend(['Cog X', 'Cog Y', 'Shear'])
+    ax1.legend([smooth_cog_y, smooth_shear], ['Cog Y', 'Shear'])
+    plt.show()
 
-file_name = 'D:/Biological Python Data/FD1513_PC-008_MCT_C1_T1_822008_063130.txt'
+def plot_cof_cog_shear():
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+    ax1.plot(x, smooth_cof_y, color='blue')        # Left Y Axis Center of Pressure
+    ax1_twin = ax1.twinx()      # Create a twin axes sharing the x-axis
+    ax1_twin.plot(x, smooth_shear, color='red')   # Right Y Axis Shear Force
+    ax1.set_ylabel('COP (cm)', color='blue')
+    ax1_twin.set_ylabel('Shear Force (N)', color='red')
+    ax1.set_title('COP Center of Pressure vs Shear Force')
+
+    ax2.plot(x, smooth_cog_y, color='black')    # Left Y Axis Cog Y
+    ax2_twin = ax2.twinx()   # Create a twin axes sharing the x-axis
+    ax2_twin.plot(x, smooth_shear, color='red')  # Right Y Axis Shear Force
+    # Add labels and titles
+    ax2.set_ylabel('COG Y (cm)', color='black')
+    ax2_twin.set_ylabel('Shear Force (N)', color='red')
+    ax2.set_title('COG Y vs Shear Force')
+    plt.tight_layout()  # Adjust layout and display the plot
+    plt.show()
+
+file_name = 'D:/Crystal_MCT/FD1528_PC-022_MCT_C5_T1_10162008_004621.txt'
 subject, date_of_birth, ht, test_type, cond_str, sampling_rate, duration, n = read_neurocom_file_header(filename=file_name)
-resid = residual_analysis(raw=sh, sampling_rate=sampling_rate, first_cutoff=2, last_cutoff=20, use_critical=False)
+#resid = residual_analysis(raw=sh, sampling_rate=sampling_rate, first_cutoff=2, last_cutoff=20, use_critical=False)
 smooth_shear = critically_damped(raw=sh, sampling_rate=sampling_rate, filter_cutoff=20)
-#plot_cop()
-plt.plot(smooth_shear, 'r')
-plt.plot(sh, 'y')
-plt
-plt.grid()
-plt.xlabel('Point Number (n)')
-plt.ylabel('Shear Force (N)')   
-plt.legend(['Smoothed Shear', 'Raw Shear'])
-plt.show()
+smooth_cog_x = low_pass(raw=fp_cogx, sampling_rate=sampling_rate, filter_cutoff=8)
+smooth_cog_y = low_pass(raw=fp_cogy, sampling_rate=sampling_rate, filter_cutoff=8)
+smooth_cof_x = low_pass(raw=fp_cofx, sampling_rate=sampling_rate, filter_cutoff=8)
+smooth_cof_y = low_pass(raw=fp_cofy, sampling_rate=sampling_rate, filter_cutoff=8)
+
+plot_cof_cog_shear()
+
+plot_cop()
+plot_cog_and_shear()
+#plt.plot(smooth_shear, 'r')
+#plt.plot(sh, 'y')
+#plt.grid()
+#plt.xlabel('Point Number (n)')
+#plt.ylabel('Shear Force (N)')
+#plt.legend(['Smoothed Shear', 'Raw Shear'])
+#plt.show()
+
+
 #plot_shear()
 #print("height is ", ht)
 #print('dp[0] = ', x[0])

@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 import numpy as np
 import math
-
+import matplotlib.pyplot as plt
 
 def next_power_of_two(n_points):
     """ returns the next power of 2 for FFT, n_points is n the number of points. If n_points is 10, the function
@@ -138,7 +138,7 @@ def residual_analysis(raw, sampling_rate, first_cutoff, last_cutoff, use_critica
     The function returns a column vector of residuals.
     :param raw: column vector of data to be filtered
     :param sampling_rate: sampling rate in Hz
-    :param first_cutoff: 
+    :param first_cutoff:
     :param last_cutoff:
     :param use_critical: boolean set to True to use critical_damped, False for low_pass
     :return: residual vector
@@ -157,6 +157,68 @@ def residual_analysis(raw, sampling_rate, first_cutoff, last_cutoff, use_critica
         cntr = cntr + 1
     return residual
 
+def add_padding(raw, sampling_rate, plot_padded_pts):
+    """
+    Fit a 3rd order polynomial to first and last 10 points of the raw data.
+    Pad the data by adding 20 points to the beginning and end of the data.
+    Return the raw data array of length 40 points longer with 20 padding points
+    at the beginning and end of the data array.
+    :param raw: Y array of data to pad of type float64
+    :param sampling_rate: sampling rate of data used to fit polynomial
+    :param plot_padded_pts: boolean set to True to plot padded points.
+    :return: padded y array of type float64
+    """
+    npad = 40  # 20 points at start 20 points at end
+    dt = 1.0 / sampling_rate
+    n = len(raw)
+    x = np.arange(0, n * dt, dt)
+    new_x = np.zeros(n + npad)
+    k = 20
+    i = 0
+    while i < n:            # copy x[] array into new_x[] array
+        new_x[k] = x[i]
+        i += 1
+        k += 1
+    i = 19
+    iv = -dt
+    while i >= 0:           # add 20 pts to start of new_x[] array
+        new_x[i] = iv
+        i -= 1
+        iv -= dt
+    i = n
+    while i < (n + npad):   # add 20 pts to end of new_x[] array
+        new_x[i] = new_x[i - 1] + dt
+        i += 1
+
+    new_y = np.zeros(n + npad)
+    i = 0
+    j = int(npad / 2)
+    while i < n:            # copy original raw[] into new_y[] array
+        new_y[j] = raw[i]
+        i += 1
+        j += 1
+
+    minus_10 = n - 11
+    # Fit a 3rd order polynomial to the First 10 pts and Last 10 pts of the data
+    # using the 3rd order polynomial extend the curve 20 points on each end
+    # ------------------------------------------------------------------------------------------
+    #fit_first_10 = np.polyfit(x[0:9], raw[0:9], 3)
+    fit_first_10 = np.polyfit(x[0:29], raw[0:29], 3)
+    fit_last_10 = np.polyfit(x[minus_10: n - 1], raw[minus_10: n - 1], 3)
+    new_y[0:20] = np.polyval(fit_first_10, new_x[0:20])
+    new_y[len(new_x) - 20:len(new_x)] = np.polyval(fit_last_10, new_x[len(new_x) - 20:len(new_x)])
+    # ------------------------------------------------------------------------------------------
+    if plot_padded_pts:     # set plot_padded_pts to True for a plot of original and padded arrays
+        plt.plot(new_x, new_y, color='b', label='Original padded 20 pts')
+        #plt.plot(new_x, sm_y, color='r', label='Smoothed padded')
+        plt.plot(x, raw, 'o', label='Original data')
+        plt.title("Position Data")
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+    # Return new_y[ ] padded with 20 new points at start and end
+    return new_y
+
 def low_pass(raw, sampling_rate, filter_cutoff):
     """
     From the 4th edition of Biomechanics and Motor Control of Human Movement
@@ -172,10 +234,12 @@ def low_pass(raw, sampling_rate, filter_cutoff):
     Output parameters
         smooth[] filtered result
     """
+    n_raw_pts = len(raw)             # save the orignal length
+    raw = add_padding(raw, sampling_rate, plot_padded_pts=False) # pad ends of raw[] data array
     n = len(raw)
     temp = np.zeros(n + 4, dtype=float)
     prime = np.zeros(n + 4, dtype=float)
-    smooth = np.zeros(n, dtype=float)
+    smooth = np.zeros(n_raw_pts, dtype=float)
     sr = sampling_rate
     fc = filter_cutoff
     nPasses = 2.0
@@ -208,8 +272,11 @@ def low_pass(raw, sampling_rate, filter_cutoff):
     for i in range((n + 1), -1, -1):
         prime[i] = a0 * temp[i] + a1 * temp[i + 1] + a2 * \
                    temp[i + 2] + b1 * prime[i + 1] + b2 * prime[i + 2]
-    for i in range(0, n):
-        smooth[i] = prime[i + 2]
+
+    k = 19       # remove the padded points at start and end of array
+    for i in range(0, n_raw_pts):
+        smooth[i] = prime[k + 3]  # prime[k + 2]
+        k += 1
     return smooth
 
 
@@ -229,10 +296,12 @@ def single_pass(raw, sampling_rate, filter_cutoff):
     Output parameters
         smooth[] filtered result
     """
+    n_raw_pts = len(raw)             # save the orignal length
+    raw = add_padding(raw, sampling_rate, plot_padded_pts=False)   # pad ends of raw[] data array
     n = len(raw)
     temp = np.zeros(n + 4, dtype=float)
     prime = np.zeros(n + 4, dtype=float)
-    smooth = np.zeros(n, dtype=float)
+    smooth = np.zeros(n_raw_pts, dtype=float)
     sr = sampling_rate
     fc = filter_cutoff
     nPasses = 1.0
@@ -260,8 +329,10 @@ def single_pass(raw, sampling_rate, filter_cutoff):
     for i in range(2, (n + 4)):
         prime[i] = a0 * temp[i] + a1 * temp[i - 1] + a2 * \
                    temp[i - 2] + b1 * prime[i - 1] + b2 * prime[i - 2]
-    for i in range(0, n):
-        smooth[i] = prime[i + 2]
+    k = 19       # remove the padded points at start and end of array
+    for i in range(0, n_raw_pts):
+        smooth[i] = prime[k + 3]
+        k += 1
     return smooth
 
 
@@ -280,10 +351,12 @@ def critically_damped(raw, sampling_rate, filter_cutoff):
     Output parameters
         smooth[] filtered result
     """
+    n_raw_pts = len(raw)             # save the orignal length
+    raw = add_padding(raw, sampling_rate, plot_padded_pts=True)   # pad ends of raw[] data array
     n = len(raw)
     temp = np.zeros(n + 4, dtype=float)
     prime = np.zeros(n + 4, dtype=float)
-    smooth = np.zeros(n, dtype=float)
+    smooth = np.zeros(n_raw_pts, dtype=float)
     sr = sampling_rate
     fc = filter_cutoff
     nPasses = 5.0  # five double (forward & backward) passes
@@ -403,7 +476,9 @@ def critically_damped(raw, sampling_rate, filter_cutoff):
         prime[i] = a0 * temp[i] + a1 * temp[i + 1] + a2 * \
                    temp[i + 2] + b1 * prime[i + 1] + b2 * prime[i + 2]
 
-    for i in range(0, n):
-        smooth[i] = prime[i + 2]
-    return smooth  # return the smoothed raw
+    k = 19       # remove the padded points at start and end of array
+    for i in range(0, n_raw_pts):
+        smooth[i] = prime[k + 3]
+        k += 1
+    return smooth
 
