@@ -157,6 +157,7 @@ def residual_analysis(raw, sampling_rate, first_cutoff, last_cutoff, use_critica
         cntr = cntr + 1
     return residual
 
+
 def add_padding(raw, sampling_rate, plot_padded_pts):
     """
     Fit a 3rd order polynomial to first and last 10 points of the raw data.
@@ -219,6 +220,7 @@ def add_padding(raw, sampling_rate, plot_padded_pts):
     # Return new_y[ ] padded with 20 new points at start and end
     return new_y
 
+
 def low_pass(raw, sampling_rate, filter_cutoff):
     """
     From the 4th edition of Biomechanics and Motor Control of Human Movement
@@ -247,7 +249,7 @@ def low_pass(raw, sampling_rate, filter_cutoff):
     cw = (2.0 ** (1.0 / nPasses) - 1.0) ** (1.0 / 4.0)
     wc = math.tan(math.pi * fc / sr) / cw
     K1 = math.sqrt(2.0) * wc
-    K2 = (wc) ** 2.0
+    K2 = wc ** 2.0
     a0 = K2 / (1.0 + K1 + K2)
     a1 = 2.0 * a0
     a2 = a0
@@ -309,7 +311,7 @@ def single_pass(raw, sampling_rate, filter_cutoff):
     cw = (2.0 ** (1.0 / nPasses) - 1.0) ** (1.0 / 4.0)
     wc = math.tan(math.pi * fc / sr) / cw
     K1 = math.sqrt(2.0) * wc
-    K2 = (wc) ** 2.0
+    K2 = wc ** 2.0
     a0 = K2 / (1.0 + K1 + K2)
     a1 = 2.0 * a0
     a2 = a0
