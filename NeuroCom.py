@@ -32,8 +32,8 @@ class NeuroCom:
             # ------   get subject height as float   -----------------------------
             ht_line = f.readline().rstrip()
             ht_str = ht_line.split(',')[1]
-            self.ht = self.fix_string(ht_str, data_type=1) * 2.54 / 100.0 # ht in meters
-            self.cog_ht = 0.5527 * self.ht  # cog ht is 55.27 % of ht, see NeuroCom Appendix
+            self.ht = self.fix_string(ht_str, data_type=1) # * 2.54 / 100.0 # ht in meters
+            self.cog_ht = np.float64(0.5527 * self.ht)  # cog ht is 55.27 % of ht, see NeuroCom Appendix
             for i in range(4):
                 f.readline()
             # ------   get test type as string   ---------------------------------
@@ -82,7 +82,8 @@ class NeuroCom:
         self.smooth_cog_y = low_pass(raw=self.fp_cogy, sampling_rate=self.sampling_rate, filter_cutoff=6)
         self.smooth_cof_x = low_pass(raw=self.fp_cofx, sampling_rate=self.sampling_rate, filter_cutoff=6)
         self.smooth_cof_y = low_pass(raw=self.fp_cofy, sampling_rate=self.sampling_rate, filter_cutoff=6)
-        for i in range(len(self.smooth_cog_y)):
+
+        for i in range(self.n):
             self.theta[i] = degrees(asin(self.smooth_cog_y[i] / self.cog_ht)) - 2.3  # See NeuroCom appendix for formula
 
     @staticmethod
@@ -96,3 +97,12 @@ class NeuroCom:
         else:
             result = float(numeric_part)
         return result
+
+    def plot_cofy_theta(self):
+        plt.plot(self.x[1:], self.theta[1:], label='theta')
+        plt.plot(self.x[1:], self.smooth_cog_y[1:], label='Cog Y')
+        plt.legend()
+        plt.grid(True)
+        plt.xlabel('Point Number (n)')
+        plt.ylabel('theta (d) Cog (cm)')
+        plt.show()
