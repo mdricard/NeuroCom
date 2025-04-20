@@ -50,6 +50,27 @@ file_name = 'D:/Crystal_MCT/FD1528_PC-022_MCT_C6_T3_10162008_004621.txt'
 c6t3 = NeuroCom(file_name)
 cond_6 = [c6t1, c6t2, c6t3]   # a list of NeuroCom objects
 
+plt.plot(c1t1.smooth_fz, label='trial 1')
+plt.plot(c1t2.smooth_fz, label='trial 2')
+plt.plot(c1t3.smooth_fz, label='trial 3')
+plt.grid(True)
+plt.legend()
+plt.xlabel('Point Number (n)')
+plt.ylabel('Vertical Force (N)')
+plt.title('MCT Condition 1')
+plt.show()
+#c1t1.moving_ave(c1t1.smooth_fz, 50)
+
+plt.plot(c1t2.smooth_cof_y, label='cond 1')
+plt.plot(c2t2.smooth_cof_y, label='cond 2')
+plt.plot(c3t2.smooth_cof_y, label='cond 3')
+plt.grid(True)
+plt.legend()
+plt.xlabel('Point Number (n)')
+plt.ylabel('COP (cm)')
+plt.title('MCT Condition 1 vs. Condition 3 vs. Condition 5')
+plt.show()
+
 plt.plot(c1t1.smooth_cof_y, label='trial 1')
 plt.plot(c1t2.smooth_cof_y, label='trial 2')
 plt.plot(c1t3.smooth_cof_y, label='trial 3')

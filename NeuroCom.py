@@ -12,6 +12,7 @@ class NeuroCom:
     sh = np.zeros(1250)
     lr = np.zeros(1250)
     rf = np.zeros(1250)
+    fz = np.zeros(1250)         # Vertical force lf + lr + rf + rr
     fp_cofx = np.zeros(1250)
     fp_cofy = np.zeros(1250)
     fp_cogx = np.zeros(1250)
@@ -77,12 +78,13 @@ class NeuroCom:
                 self.fp_cofy[row] = self.fix_string(nmbr_str[7], data_type=1)
                 self.fp_cogx[row] = self.fix_string(nmbr_str[8], data_type=1)
                 self.fp_cogy[row] = self.fix_string(nmbr_str[9], data_type=1)
+                self.fz[row] = self.lf[row] + self.lr[row] + self.rf[row] + self.rr[row]
         self.smooth_shear = critically_damped(raw=self.sh, sampling_rate=self.sampling_rate, filter_cutoff=20)
         self.smooth_cog_x = low_pass(raw=self.fp_cogx, sampling_rate=self.sampling_rate, filter_cutoff=6)
         self.smooth_cog_y = low_pass(raw=self.fp_cogy, sampling_rate=self.sampling_rate, filter_cutoff=6)
         self.smooth_cof_x = low_pass(raw=self.fp_cofx, sampling_rate=self.sampling_rate, filter_cutoff=6)
         self.smooth_cof_y = low_pass(raw=self.fp_cofy, sampling_rate=self.sampling_rate, filter_cutoff=6)
-
+        self.smooth_fz = critically_damped(raw=self.fz, sampling_rate=self.sampling_rate, filter_cutoff=20)
         for i in range(self.n):
             self.theta[i] = degrees(asin(self.smooth_cog_y[i] / self.cog_ht)) - 2.3  # See NeuroCom appendix for formula
 
@@ -106,3 +108,17 @@ class NeuroCom:
         plt.xlabel('Point Number (n)')
         plt.ylabel('theta (d) Cog (cm)')
         plt.show()
+
+    def moving_ave(self, curve, window_size):
+        npts = len(curve)
+        m_ave = np.zeros(npts)
+        if window_size % 2 == 0:
+            window_size += 1
+        start_pt = int(window_size / 2)
+        for i in range(int(window_size/2), npts - int(window_size/2)):
+            sum = 0.0
+            cntr = 0
+            for p in range(i-start_pt, i+start_pt+1):
+                sum += curve[p]
+                cntr += 1
+            m_ave[i] = sum / cntr
