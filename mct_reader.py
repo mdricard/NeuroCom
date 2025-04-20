@@ -171,7 +171,7 @@ def plot_cof_cog_shear():
     plt.tight_layout()  # Adjust layout and display the plot
     plt.show()
 
-file_name = 'D:/Crystal_MCT/FD1528_PC-022_MCT_C5_T1_10162008_004621.txt'
+file_name = 'D:/Crystal_MCT/FD1528_PC-022_MCT_C1_T2_10162008_004621.txt'
 #file_name = 'D:/Crystal_MCT/FD1528_PC-022_SOT_C1_T1_10162008_003707.txt'
 subject, date_of_birth, ht, cog_ht, test_type, cond_str, sampling_rate, duration, n = read_neurocom_file_header(filename=file_name)
 #resid = residual_analysis(raw=sh, sampling_rate=sampling_rate, first_cutoff=2, last_cutoff=20, use_critical=False)

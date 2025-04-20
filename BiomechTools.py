@@ -354,7 +354,7 @@ def critically_damped(raw, sampling_rate, filter_cutoff):
         smooth[] filtered result
     """
     n_raw_pts = len(raw)             # save the orignal length
-    raw = add_padding(raw, sampling_rate, plot_padded_pts=True)   # pad ends of raw[] data array
+    raw = add_padding(raw, sampling_rate, plot_padded_pts=False)   # pad ends of raw[] data array
     n = len(raw)
     temp = np.zeros(n + 4, dtype=float)
     prime = np.zeros(n + 4, dtype=float)
